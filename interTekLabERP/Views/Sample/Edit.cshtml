@@ -1,5 +1,12 @@
 ﻿@model interTekLabERP.Entities.SampleRequest
 
+@{
+    var selectedTests = (Model.AnalysisInfo ?? "")
+        .Split('|', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim())
+        .ToList();
+}
+
 <h3>Numune Düzenle</h3>
 
 <form asp-action="Edit" method="post">
@@ -23,23 +30,46 @@
 
     <div class="mb-3">
         <label class="form-label">Analiz / Test</label>
-        <select asp-for="AnalysisInfo" class="form-select">
-            <option value="">Seçiniz...</option>
+        <select name="analysisTests"
+                id="analysisTests"
+                class="form-select"
+                multiple
+                required>
             @foreach (var t in (List<interTekLabERP.Entities.TestCard>)ViewBag.TestCards)
             {
-                <option value="@t.Name">@t.Name</option>
+                if (selectedTests.Contains(t.Name))
+                {
+                    <option value="@t.Name" data-code="@t.Code" title="@t.Name" selected>@t.Name</option>
+
+                }
+                else
+                {
+                    <option value="@t.Name" data-code="@t.Code" title="@t.Name">@t.Name</option>
+
+                }
             }
         </select>
+        <small class="text-muted">Birden fazla test seçebilirsiniz.</small>
     </div>
-    <div class="mb-3">
 
+    <div class="mb-3">
+        <label class="form-label">Hedef Süre (iş günü)</label>
+        <input asp-for="TargetDays"
+               type="number"
+               min="1"
+               max="90"
+               id="targetDays"
+               class="form-control"
+               required />
+        <small class="text-muted" id="targetPreview"></small>
+    </div>
+
+    <div class="mb-3">
         <label class="form-label">
             Hizmet Alınan
         </label>
-
         <input asp-for="ServicePurchasedFrom"
                class="form-control" />
-
     </div>
 
     <button type="submit"
@@ -53,3 +83,65 @@
     </a>
 
 </form>
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+
+        initTestSelect2($('#analysisTests'));
+
+            var acceptDate = new Date('@Model.SampleAcceptDate.ToString("yyyy-MM-ddTHH:mm:ss")');
+
+            function isWorkingDay(d) {
+                var g = d.getDay();
+                return g !== 0 && g !== 6;
+            }
+
+            function calcTarget(days) {
+                var current = new Date(acceptDate.getFullYear(), acceptDate.getMonth(), acceptDate.getDate());
+                var counted = 0;
+
+                if (acceptDate.getHours() < 12 && isWorkingDay(current)) {
+                    counted = 1;
+                }
+
+                while (counted < days) {
+                    current.setDate(current.getDate() + 1);
+                    if (isWorkingDay(current)) {
+                        counted++;
+                    }
+                }
+
+                return current;
+            }
+
+            function showPreview() {
+                var days = parseInt($('#targetDays').val(), 10);
+
+                if (!days || days < 1) {
+                    $('#targetPreview').text('');
+                    return;
+                }
+
+                var d = calcTarget(days);
+
+                var text = d.toLocaleDateString('tr-TR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric', weekday: 'long'
+                });
+
+                $('#targetPreview').text('Hedef tarih: ' + text + ' (kabul tarihine göre)');
+            }
+
+            $('#targetDays').on('input', function () {
+                if (this.value.length > 2) {
+                    this.value = this.value.slice(0, 2);
+                }
+            });
+
+            $('#targetDays').on('input', showPreview);
+            showPreview();
+
+        });
+    </script>
+}

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using interTekLabERP.Helpers;
-using interTekLabERP.ViewModels;
 
 namespace interTekLabERP.Controllers;
 
@@ -75,7 +74,6 @@ public class SampleController : Controller
     [HttpPost]
     public IActionResult BulkCreate(BulkSampleViewModel model)
     {
-        // en az bir dolu satır var mı kontrol et
         bool hasAnyRow = model.Rows != null &&
                          model.Rows.Any(r => !string.IsNullOrWhiteSpace(r.ProductName));
 
@@ -94,6 +92,22 @@ public class SampleController : Controller
             return View(model);
         }
 
+        var filled = model.Rows.Where(r => !string.IsNullOrWhiteSpace(r.ProductName));
+
+        if (filled.Any(r => r.AnalysisTests == null || r.AnalysisTests.Count == 0))
+        {
+            TempData["Error"] = "Her numune satırında en az bir analiz/test seçilmelidir.";
+            ViewBag.TestCards = _testCardService.GetActive();
+            return View(model);
+        }
+
+        if (filled.Any(r => r.TargetDays == null || r.TargetDays < 1 || r.TargetDays > 99))
+        {
+            TempData["Error"] = "Her numune satırında hedef süre 1-99 iş günü arasında olmalıdır.";
+            ViewBag.TestCards = _testCardService.GetActive();
+            return View(model);
+        }
+
         var createdBy = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         _sampleService.AddBulk(model.OfferNo, model.CustomerName, model.Rows, createdBy);
@@ -108,14 +122,23 @@ public class SampleController : Controller
 
         return View();
     }
-
     [HttpPost]
-    public IActionResult Create(SampleRequest model)
+    public IActionResult Create(SampleRequest model, string[] analysisTests)
     {
+        model.AnalysisInfo = analysisTests != null && analysisTests.Length > 0
+            ? string.Join(" | ", analysisTests)
+            : string.Empty;
+
+        if (string.IsNullOrWhiteSpace(model.AnalysisInfo))
+            ModelState.AddModelError("AnalysisInfo", "En az bir analiz/test seçiniz.");
+
+        if (model.TargetDays == null || model.TargetDays < 1 || model.TargetDays > 99)
+            ModelState.AddModelError("TargetDays", "Hedef süre 1-99 iş günü arasında olmalıdır.");
+
         if (!ModelState.IsValid)
         {
             ViewBag.NextTrackingNo = _sampleService.GenerateTrackingNo();
-            ViewBag.TestCards = _testCardService.GetActive();   // 👈 eklendi
+            ViewBag.TestCards = _testCardService.GetActive();
             return View(model);
         }
 
@@ -184,11 +207,13 @@ public class SampleController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(SampleRequest model)
+    public IActionResult Edit(SampleRequest model, string[] analysisTests)
     {
-        if (!ModelState.IsValid)
+
+        if (model.TargetDays == null || model.TargetDays < 1 || model.TargetDays > 99)
         {
-            return View(model);
+            TempData["Error"] = "Hedef süre 1-99 iş günü arasında olmalıdır.";
+            return RedirectToAction(nameof(Edit), new { id = model.Id });
         }
 
         var entity = _sampleService.GetById(model.Id);
@@ -201,8 +226,22 @@ public class SampleController : Controller
         entity.OfferNo = model.OfferNo;
         entity.CustomerName = model.CustomerName;
         entity.ProductName = model.ProductName;
-        entity.AnalysisInfo = model.AnalysisInfo;
         entity.ServicePurchasedFrom = model.ServicePurchasedFrom;
+
+        entity.AnalysisInfo = analysisTests != null && analysisTests.Length > 0
+            ? string.Join(" | ", analysisTests)
+            : string.Empty;
+
+        // hedef süre değiştiyse hedef tarihi kabul tarihine göre yeniden hesapla
+        entity.TargetDays = model.TargetDays;
+
+        if (model.TargetDays.HasValue && model.TargetDays.Value > 0)
+        {
+            entity.TargetDate = _sampleService.CalculateTargetDate(
+                entity.SampleAcceptDate,
+                model.TargetDays.Value);
+        }
+
         entity.UpdatedBy = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         entity.UpdatedDate = DateTime.Now;
 

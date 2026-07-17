@@ -1,0 +1,121 @@
+﻿@model interTekLabERP.ViewModels.LoginViewModel
+
+@{
+    Layout = "_AuthLayout";
+}
+<div class="text-center text-white mb-4">
+
+    <h1 class="fw-bold">
+        ITKFood
+    </h1>
+
+    <p>
+        Numune ve Analiz Takip Yönetimi
+    </p>
+
+</div>
+
+<div class="card login-card">
+
+    <div class="card-body p-5">
+
+        <div class="text-center mb-4">
+
+            <div class="logo-title">
+                ITKFood
+            </div>
+
+            <div class="logo-subtitle">
+                Laboratuvar Yönetim Sistemi
+            </div>
+
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+
+                @ViewBag.Error
+
+            </div>
+        }
+
+        <form asp-action="Login"
+              method="post">
+
+            <div class="mb-3">
+
+                <label class="form-label">
+
+                    Kullanıcı Adı
+
+                </label>
+
+                <input asp-for="UserName"
+                       class="form-control"
+                       placeholder="Kullanıcı adınızı giriniz" />
+
+            </div>
+
+            <div class="mb-4">
+
+                <label class="form-label">
+
+                    Şifre
+
+                </label>
+
+                <div class="input-group">
+
+                    <input asp-for="Password"
+                           id="password"
+                           type="password"
+                           class="form-control"
+                           placeholder="Şifrenizi giriniz" />
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            onclick="togglePassword()">
+
+                        <i class="bi bi-eye"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary btn-login w-100">
+
+                Giriş Yap
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <script>
+
+        function togglePassword()
+        {
+            const password =
+                document.getElementById('password');
+
+            if (password.type === 'password')
+            {
+                password.type = 'text';
+            }
+            else
+            {
+                password.type = 'password';
+            }
+        }
+
+    </script>
+}

@@ -1,0 +1,55 @@
+﻿@model interTekLabERP.Entities.SampleRequest
+
+<h3>Numune Düzenle</h3>
+
+<form asp-action="Edit" method="post">
+
+    <input asp-for="Id" type="hidden" />
+
+    <div class="mb-3">
+        <label class="form-label">Teklif No</label>
+        <input asp-for="OfferNo" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Müşteri Adı</label>
+        <input asp-for="CustomerName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ürün Adı</label>
+        <input asp-for="ProductName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Analiz / Test</label>
+        <select asp-for="AnalysisInfo" class="form-select">
+            <option value="">Seçiniz...</option>
+            @foreach (var t in (List<interTekLabERP.Entities.TestCard>)ViewBag.TestCards)
+            {
+                <option value="@t.Name">@t.Name</option>
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+
+        <label class="form-label">
+            Hizmet Alınan
+        </label>
+
+        <input asp-for="ServicePurchasedFrom"
+               class="form-control" />
+
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Kaydet
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Vazgeç
+    </a>
+
+</form>

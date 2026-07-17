@@ -1,0 +1,177 @@
+@model interTekLabERP.ViewModels.BulkSampleViewModel
+
+@{
+    ViewData["Title"] = "Toplu Numune Girişi";
+
+    var testCards = (List<interTekLabERP.Entities.TestCard>)ViewBag.TestCards;
+
+    var optionsSb = new System.Text.StringBuilder();
+    optionsSb.Append("<option value=\"\">Seçiniz...</option>");
+    foreach (var t in testCards)
+    {
+        optionsSb.Append($"<option value=\"{t.Name}\">{t.Name}</option>");
+    }
+    var optionsHtml = optionsSb.ToString();
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Toplu Numune Girişi</h3>
+    <div>
+        <a asp-action="Create" class="btn btn-outline-secondary">
+            Tekli Giriş
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            Listeye Dön
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    Aşağıdaki her satır ayrı bir numune olarak kaydedilir ve her birine otomatik takip no verilir.
+</div>
+
+<form id="bulkForm" asp-action="BulkCreate" method="post">
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="text-primary mb-3" style="font-size: 0.85rem;">
+                TÜM NUMUNELER İÇİN ORTAK
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Teklif No</label>
+                    <input name="OfferNo" value="@Model.OfferNo" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Müşteri Adı</label>
+                    <input name="CustomerName" value="@Model.CustomerName" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Numuneler (<span id="rowCount">0</span>)</h5>
+        <button type="button" id="addRowBtn" class="btn btn-outline-primary">
+            + Satır Ekle
+        </button>
+    </div>
+
+    <div class="row g-2 px-1 mb-1 text-muted" style="font-size: 0.8rem;">
+        <div class="col">ÜRÜN ADI</div>
+        <div class="col">ANALİZ / TEST</div>
+        <div class="col">HİZMET ALINAN</div>
+        <div class="col-auto" style="width: 52px;"></div>
+    </div>
+
+    <div id="rowsContainer">
+        @for (int i = 0; i < Model.Rows.Count; i++)
+        {
+            <div class="bulk-row row g-2 mb-2 align-items-center">
+                <div class="col">
+                    <input name="Rows[@i].ProductName" value="@Model.Rows[i].ProductName"
+                           class="form-control" placeholder="Ürün adı" />
+                </div>
+                <div class="col">
+                    <select name="Rows[@i].AnalysisInfo" class="form-select">
+                        @Html.Raw(optionsHtml)
+                    </select>
+                </div>
+                <div class="col">
+                    <input name="Rows[@i].ServicePurchasedFrom" value="@Model.Rows[i].ServicePurchasedFrom"
+                           class="form-control" placeholder="Hizmet alınan" />
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-outline-danger btn-remove">&times;</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-success">
+            Tümünü Kaydet
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            İptal
+        </a>
+    </div>
+
+</form>
+
+<template id="rowTemplate">
+    <div class="bulk-row row g-2 mb-2 align-items-center">
+        <div class="col">
+            <input name="Rows[__i__].ProductName" class="form-control" placeholder="Ürün adı" />
+        </div>
+        <div class="col">
+            <select name="Rows[__i__].AnalysisInfo" class="form-select">
+                @Html.Raw(optionsHtml)
+            </select>
+        </div>
+        <div class="col">
+            <input name="Rows[__i__].ServicePurchasedFrom" class="form-control" placeholder="Hizmet alınan" />
+        </div>
+        <div class="col-auto">
+            <button type="button" class="btn btn-outline-danger btn-remove">&times;</button>
+        </div>
+    </div>
+</template>
+
+@section Scripts
+{
+    <script>
+        (function () {
+            var rowsContainer = document.getElementById('rowsContainer');
+            var tpl = document.getElementById('rowTemplate');
+            var counter = rowsContainer.querySelectorAll('.bulk-row').length;
+
+            function updateCount() {
+                document.getElementById('rowCount').textContent =
+                    rowsContainer.querySelectorAll('.bulk-row').length;
+            }
+
+            document.getElementById('addRowBtn').addEventListener('click', function () {
+                var html = tpl.innerHTML.replace(/__i__/g, counter);
+                var wrapper = document.createElement('div');
+                wrapper.innerHTML = html.trim();
+                rowsContainer.appendChild(wrapper.firstElementChild);
+                counter++;
+                updateCount();
+            });
+
+            rowsContainer.addEventListener('click', function (e) {
+                if (e.target.classList.contains('btn-remove')) {
+                    var row = e.target.closest('.bulk-row');
+                    var rows = rowsContainer.querySelectorAll('.bulk-row');
+                    if (rows.length > 1) {
+                        row.remove();
+                    } else {
+                        row.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+                        row.querySelectorAll('select').forEach(function (s) { s.selectedIndex = 0; });
+                    }
+                    updateCount();
+                }
+            });
+
+            // Gönderimden önce index'leri 0..n olarak yeniden numarala
+            document.getElementById('bulkForm').addEventListener('submit', function () {
+                var rows = rowsContainer.querySelectorAll('.bulk-row');
+                rows.forEach(function (row, idx) {
+                    row.querySelectorAll('[name]').forEach(function (el) {
+                        el.name = el.name.replace(/Rows\[\d+\]/, 'Rows[' + idx + ']');
+                    });
+                });
+            });
+
+            updateCount();
+        })();
+    </script>
+}

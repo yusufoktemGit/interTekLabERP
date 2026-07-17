@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="InterTekLabERP.Business/InterTekLabERP.Business.csproj" />
+  <Project Path="InterTekLabERP.Data/InterTekLabERP.Data.csproj" />
+  <Project Path="InterTekLabERP.Entities/InterTekLabERP.Entities.csproj" />
+  <Project Path="interTekLabERP/interTekLabERP.csproj" />
+</Solution>

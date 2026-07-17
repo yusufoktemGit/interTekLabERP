@@ -1,0 +1,66 @@
+﻿@model interTekLabERP.Entities.SampleRequest
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <title>Numune Etiketi</title>
+
+    <style>
+
+            body {
+                font-family: Arial;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .sample-code {
+                font-size: 22px;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+
+            img {
+                width: 220px;
+            }
+
+    </style>
+
+</head>
+
+<body>
+
+    <img src="@ViewBag.QrImage" />
+
+    <div class="sample-code">
+        @(Model.SampleCode ?? Model.TrackingNo)
+    </div>
+
+    <div>
+        @Model.CustomerName
+    </div>
+
+    <div>
+        @Model.ProductName
+    </div>
+
+    <script>
+
+            window.onload = function ()
+            {
+                window.print();
+            };
+
+    </script>
+
+</body>
+
+</html>

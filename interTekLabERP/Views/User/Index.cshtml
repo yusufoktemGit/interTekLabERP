@@ -1,0 +1,90 @@
+﻿@model List<interTekLabERP.Entities.User>
+
+<div class="d-flex justify-content-between mb-3">
+    <h3>Kullanıcılar</h3>
+
+    <a asp-action="Create"
+       class="btn btn-primary">
+        Yeni Kullanıcı
+    </a>
+</div>
+
+<table id="tblUsers" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Ad Soyad</th>
+            <th>Kullanıcı Adı</th>
+            <th>Rol</th>
+            <th>Durum</th>
+            <th>Oluşturma Tarihi</th>
+            <th width="180">İşlemler</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FullName</td>
+                <td>@item.UserName</td>
+                <td>@item.Role</td>
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="badge bg-success">Aktif</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Pasif</span>
+                    }
+                </td>
+                <td>@item.CreatedDate.ToString("dd.MM.yyyy")</td>
+                <td>
+                    <a asp-action="Edit"
+                       asp-route-id="@item.Id"
+                       class="btn btn-warning btn-sm">
+                        Düzenle
+                    </a>
+
+                    @if (item.IsActive)
+                    {
+                        <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@item.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Kullanıcı pasif yapılsın mı?')">
+                                Pasif Yap
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@item.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-success btn-sm">
+                                Aktif Yap
+                            </button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            $('#tblUsers').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/tr.json'
+                }
+            });
+        });
+    </script>
+}

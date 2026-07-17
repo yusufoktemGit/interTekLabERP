@@ -1,0 +1,64 @@
+﻿@model interTekLabERP.Entities.SampleRequest
+
+<h2>Yeni Numune</h2>
+
+<form method="post">
+    <div class="alert alert-info">
+
+        <div class="fw-bold">
+            Takip No Önizleme
+        </div>
+
+        <div class="fs-5">
+            @ViewBag.NextTrackingNo
+        </div>
+
+        <small>
+            Takip numarası kayıt sırasında
+            sistem tarafından kesin olarak oluşturulur.
+        </small>
+
+    </div>
+
+    <div class="mb-3">
+        <label>Teklif No</label>
+        <input asp-for="OfferNo" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Müşteri Adı</label>
+        <input asp-for="CustomerName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Ürün Adı</label>
+        <input asp-for="ProductName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Analiz / Test</label>
+        <select asp-for="AnalysisInfo" class="form-select">
+            <option value="">Seçiniz...</option>
+            @foreach (var t in (List<interTekLabERP.Entities.TestCard>)ViewBag.TestCards)
+            {
+                <option value="@t.Name">@t.Name</option>
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+
+        <label class="form-label">
+            Hizmet Alınan
+        </label>
+
+        <input asp-for="ServicePurchasedFrom"
+               class="form-control" />
+
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Kaydet
+    </button>
+
+</form>

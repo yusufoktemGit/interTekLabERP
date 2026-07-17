@@ -46,7 +46,11 @@ public class SampleRequest
     public DateTime? UpdatedDate { get; set; }
 
     public DateTime? ExitDate { get; set; }
-    public string? CancelReason { get; set; }   
+    public string? CancelReason { get; set; }
+
+    public DateTime? TargetDate { get; set; }
+
+    public int? TargetDays { get; set; }
 
     public User? UpdatedByUser { get; set; }
     public string? ServicePurchasedFrom { get; set; }

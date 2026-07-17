@@ -70,8 +70,11 @@ public class SampleService : ISampleService
                 OfferNo = offerNo,
                 CustomerName = customerName,
                 ProductName = row.ProductName,
-                AnalysisInfo = row.AnalysisInfo,
+                AnalysisInfo = row.AnalysisTests != null && row.AnalysisTests.Count > 0
+                      ? string.Join(" | ", row.AnalysisTests)
+                      : row.AnalysisInfo,
                 ServicePurchasedFrom = row.ServicePurchasedFrom,
+                TargetDays = row.TargetDays,
                 CreatedBy = createdBy
             };
 
@@ -96,6 +99,12 @@ public class SampleService : ISampleService
 
         sampleRequest.StatusId = SampleStatusIds.Registered;
 
+        // hedef tarihi hesapla
+        if (sampleRequest.TargetDays.HasValue && sampleRequest.TargetDays.Value > 0)
+        {
+            sampleRequest.TargetDate = CalculateTargetDate(now, sampleRequest.TargetDays.Value);
+        }
+
         _context.SampleRequests.Add(sampleRequest);
 
         _context.SaveChanges();
@@ -117,6 +126,37 @@ public class SampleService : ISampleService
             .FirstOrDefault();
 
         return $"ITL-{year}-{(lastId + 1):00000}";
+    }
+
+    public DateTime CalculateTargetDate(DateTime acceptDate, int workingDays)
+    {
+        var current = acceptDate.Date;
+        int counted = 0;
+
+        // 12:00'dan önce girildiyse ve o gün iş günüyse, kabul günü 1. gün sayılır
+        if (acceptDate.Hour < 12 && IsWorkingDay(current))
+        {
+            counted = 1;
+        }
+
+        while (counted < workingDays)
+        {
+            current = current.AddDays(1);
+
+            if (IsWorkingDay(current))
+            {
+                counted++;
+            }
+        }
+
+        return current;
+    }
+
+    private static bool IsWorkingDay(DateTime date)
+    {
+        // Resmi tatiller eklenecekse SADECE burası genişletilir
+        return date.DayOfWeek != DayOfWeek.Saturday
+            && date.DayOfWeek != DayOfWeek.Sunday;
     }
 
     public void Update(SampleRequest sampleRequest)

@@ -21,6 +21,12 @@
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+          rel="stylesheet" />
+
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+          rel="stylesheet" />
+
     <style>
 
             :root {
@@ -130,6 +136,11 @@
                 border-radius: 18px;
                 box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04);
             }
+
+            .select2-container--bootstrap-5 .select2-selection--multiple {
+            max-height: 90px;
+            overflow-y: auto;
+        }
 
     </style>
 
@@ -253,6 +264,26 @@
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        function initTestSelect2($el) {
+            $el.select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Test seçiniz...',
+                width: '100%',
+                closeOnSelect: false,
+                templateSelection: function (data) {
+                    if (!data.id) {
+                        return data.text;
+                    }
+                    var code = $(data.element).attr('data-code');
+                    return code ? code : data.text;
+                }
+            });
+        }
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

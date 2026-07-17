@@ -1,4 +1,4 @@
-namespace interTekLabERP.Entities;
+﻿namespace interTekLabERP.Entities;
 
 public class BulkSampleRow
 {
@@ -6,5 +6,9 @@ public class BulkSampleRow
 
     public string AnalysisInfo { get; set; } = string.Empty;
 
+    public List<string> AnalysisTests { get; set; } = new();   
+
     public string? ServicePurchasedFrom { get; set; }
+
+    public int? TargetDays { get; set; }
 }

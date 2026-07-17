@@ -27,5 +27,6 @@ namespace interTekLabERP.Business.Services
 
         void Cancel(int sampleId, int userId, string reason);
         void Delete(int id);
+        DateTime CalculateTargetDate(DateTime acceptDate, int workingDays);
     }
 }

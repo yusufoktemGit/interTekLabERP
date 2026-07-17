@@ -6,10 +6,9 @@
     var testCards = (List<interTekLabERP.Entities.TestCard>)ViewBag.TestCards;
 
     var optionsSb = new System.Text.StringBuilder();
-    optionsSb.Append("<option value=\"\">Seçiniz...</option>");
     foreach (var t in testCards)
     {
-        optionsSb.Append($"<option value=\"{t.Name}\">{t.Name}</option>");
+        optionsSb.Append($"<option value=\"{t.Name}\" data-code=\"{t.Code}\" title=\"{t.Name}\">{t.Name}</option>");
     }
     var optionsHtml = optionsSb.ToString();
 }
@@ -65,26 +64,44 @@
     </div>
 
     <div class="row g-2 px-1 mb-1 text-muted" style="font-size: 0.8rem;">
-        <div class="col">ÜRÜN ADI</div>
+        <div class="col-3">ÜRÜN ADI</div>
         <div class="col">ANALİZ / TEST</div>
-        <div class="col">HİZMET ALINAN</div>
+        <div class="col-auto" style="width: 110px;">HEDEF (GÜN)</div>
+        <div class="col-2">HİZMET ALINAN</div>
         <div class="col-auto" style="width: 52px;"></div>
     </div>
 
     <div id="rowsContainer">
         @for (int i = 0; i < Model.Rows.Count; i++)
         {
-            <div class="bulk-row row g-2 mb-2 align-items-center">
-                <div class="col">
+            <div class="bulk-row row g-2 mb-2 align-items-start">
+                <div class="col-3">
                     <input name="Rows[@i].ProductName" value="@Model.Rows[i].ProductName"
                            class="form-control" placeholder="Ürün adı" />
                 </div>
                 <div class="col">
-                    <select name="Rows[@i].AnalysisInfo" class="form-select">
-                        @Html.Raw(optionsHtml)
+                    <select name="Rows[@i].AnalysisTests" class="form-select analysis-select" multiple>
+                        @foreach (var t in testCards)
+                        {
+                            if (Model.Rows[i].AnalysisTests != null && Model.Rows[i].AnalysisTests.Contains(t.Name))
+                            {
+                                <option value="@t.Name" data-code="@t.Code" title="@t.Name" selected>@t.Name</option>
+
+                            }
+                            else
+                            {
+                                <option value="@t.Name" data-code="@t.Code" title="@t.Name">@t.Name</option>
+                            }
+                        }
                     </select>
                 </div>
-                <div class="col">
+                <div class="col-auto" style="width: 110px;">
+                    <input name="Rows[@i].TargetDays" value="@Model.Rows[i].TargetDays"
+                           type="number" min="1" max="99"
+                           class="form-control target-days" placeholder="Gün" />
+                    <small class="text-muted target-preview" style="font-size: 0.7rem;"></small>
+                </div>
+                <div class="col-2">
                     <input name="Rows[@i].ServicePurchasedFrom" value="@Model.Rows[i].ServicePurchasedFrom"
                            class="form-control" placeholder="Hizmet alınan" />
                 </div>
@@ -107,16 +124,21 @@
 </form>
 
 <template id="rowTemplate">
-    <div class="bulk-row row g-2 mb-2 align-items-center">
-        <div class="col">
+    <div class="bulk-row row g-2 mb-2 align-items-start">
+        <div class="col-3">
             <input name="Rows[__i__].ProductName" class="form-control" placeholder="Ürün adı" />
         </div>
         <div class="col">
-            <select name="Rows[__i__].AnalysisInfo" class="form-select">
+            <select name="Rows[__i__].AnalysisTests" class="form-select analysis-select" multiple>
                 @Html.Raw(optionsHtml)
             </select>
         </div>
-        <div class="col">
+        <div class="col-auto" style="width: 110px;">
+            <input name="Rows[__i__].TargetDays" type="number" min="1" max="99"
+                   class="form-control target-days" placeholder="Gün" />
+            <small class="text-muted target-preview" style="font-size: 0.7rem;"></small>
+        </div>
+        <div class="col-2">
             <input name="Rows[__i__].ServicePurchasedFrom" class="form-control" placeholder="Hizmet alınan" />
         </div>
         <div class="col-auto">
@@ -128,50 +150,101 @@
 @section Scripts
 {
     <script>
-        (function () {
-            var rowsContainer = document.getElementById('rowsContainer');
-            var tpl = document.getElementById('rowTemplate');
-            var counter = rowsContainer.querySelectorAll('.bulk-row').length;
+        $(document).ready(function () {
 
-            function updateCount() {
-                document.getElementById('rowCount').textContent =
-                    rowsContainer.querySelectorAll('.bulk-row').length;
+            var $rowsContainer = $('#rowsContainer');
+            var tpl = document.getElementById('rowTemplate');
+            var counter = $rowsContainer.find('.bulk-row').length;
+
+            function isWorkingDay(d) {
+                var g = d.getDay();
+                return g !== 0 && g !== 6;
             }
 
-            document.getElementById('addRowBtn').addEventListener('click', function () {
+            function calcTarget(days) {
+                var now = new Date();
+                var current = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                var counted = 0;
+
+                if (now.getHours() < 12 && isWorkingDay(current)) {
+                    counted = 1;
+                }
+
+                while (counted < days) {
+                    current.setDate(current.getDate() + 1);
+                    if (isWorkingDay(current)) {
+                        counted++;
+                    }
+                }
+
+                return current;
+            }
+
+        function initRow($row) {
+                initTestSelect2($row.find('.analysis-select'));
+            }
+
+            function updateCount() {
+                $('#rowCount').text($rowsContainer.find('.bulk-row').length);
+            }
+
+            $rowsContainer.find('.bulk-row').each(function () {
+                initRow($(this));
+            });
+
+            $('#addRowBtn').on('click', function () {
                 var html = tpl.innerHTML.replace(/__i__/g, counter);
-                var wrapper = document.createElement('div');
-                wrapper.innerHTML = html.trim();
-                rowsContainer.appendChild(wrapper.firstElementChild);
+                var $row = $(html.trim());
+                $rowsContainer.append($row);
+                initRow($row);
                 counter++;
                 updateCount();
             });
 
-            rowsContainer.addEventListener('click', function (e) {
-                if (e.target.classList.contains('btn-remove')) {
-                    var row = e.target.closest('.bulk-row');
-                    var rows = rowsContainer.querySelectorAll('.bulk-row');
-                    if (rows.length > 1) {
-                        row.remove();
-                    } else {
-                        row.querySelectorAll('input').forEach(function (i) { i.value = ''; });
-                        row.querySelectorAll('select').forEach(function (s) { s.selectedIndex = 0; });
-                    }
-                    updateCount();
+            $rowsContainer.on('input', '.target-days', function () {
+                if (this.value.length > 2) {
+                    this.value = this.value.slice(0, 2);
                 }
+
+                var $preview = $(this).closest('.bulk-row').find('.target-preview');
+                var days = parseInt(this.value, 10);
+
+                if (!days || days < 1) {
+                    $preview.text('');
+                    return;
+                }
+
+                var d = calcTarget(days);
+
+                $preview.text(d.toLocaleDateString('tr-TR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                }));
             });
 
-            // Gönderimden önce index'leri 0..n olarak yeniden numarala
-            document.getElementById('bulkForm').addEventListener('submit', function () {
-                var rows = rowsContainer.querySelectorAll('.bulk-row');
-                rows.forEach(function (row, idx) {
-                    row.querySelectorAll('[name]').forEach(function (el) {
-                        el.name = el.name.replace(/Rows\[\d+\]/, 'Rows[' + idx + ']');
+            $rowsContainer.on('click', '.btn-remove', function () {
+                var $row = $(this).closest('.bulk-row');
+
+                if ($rowsContainer.find('.bulk-row').length > 1) {
+                    $row.find('.analysis-select').select2('destroy');
+                    $row.remove();
+                } else {
+                    $row.find('input').val('');
+                    $row.find('.analysis-select').val(null).trigger('change');
+                    $row.find('.target-preview').text('');
+                }
+
+                updateCount();
+            });
+
+            $('#bulkForm').on('submit', function () {
+                $rowsContainer.find('.bulk-row').each(function (idx) {
+                    $(this).find('[name]').each(function () {
+                        this.name = this.name.replace(/Rows\[\d+\]/, 'Rows[' + idx + ']');
                     });
                 });
             });
 
             updateCount();
-        })();
+        });
     </script>
 }

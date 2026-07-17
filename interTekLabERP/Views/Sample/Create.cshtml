@@ -3,21 +3,18 @@
 <h2>Yeni Numune</h2>
 
 <form method="post">
-    <div class="alert alert-info">
 
+    <div class="alert alert-info">
         <div class="fw-bold">
             Takip No Önizleme
         </div>
-
         <div class="fs-5">
             @ViewBag.NextTrackingNo
         </div>
-
         <small>
             Takip numarası kayıt sırasında
             sistem tarafından kesin olarak oluşturulur.
         </small>
-
     </div>
 
     <div class="mb-3">
@@ -35,25 +32,42 @@
         <input asp-for="ProductName" class="form-control" />
     </div>
 
+    @* 👇 çoklu seçim *@
     <div class="mb-3">
         <label>Analiz / Test</label>
-        <select asp-for="AnalysisInfo" class="form-select">
-            <option value="">Seçiniz...</option>
+        <select name="analysisTests"
+                id="analysisTests"
+                class="form-select"
+                multiple
+                required>
             @foreach (var t in (List<interTekLabERP.Entities.TestCard>)ViewBag.TestCards)
             {
-                <option value="@t.Name">@t.Name</option>
+                <option value="@t.Name" data-code="@t.Code" title="@t.Name">@t.Name</option>
+
             }
         </select>
+        <small class="text-muted">Birden fazla test seçebilirsiniz.</small>
     </div>
-    <div class="mb-3">
 
+    <div class="mb-3">
+        <label>Hedef Süre (iş günü)</label>
+        <input asp-for="TargetDays"
+               type="number"
+               min="1"
+               max="99"
+               id="targetDays"
+               class="form-control"
+               placeholder="Örn: 3"
+               required />
+        <small class="text-muted" id="targetPreview"></small>
+    </div>
+
+    <div class="mb-3">
         <label class="form-label">
             Hizmet Alınan
         </label>
-
         <input asp-for="ServicePurchasedFrom"
                class="form-control" />
-
     </div>
 
     <button type="submit"
@@ -62,3 +76,60 @@
     </button>
 
 </form>
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+
+         initTestSelect2($('#analysisTests'));
+
+            function isWorkingDay(d) {
+                var g = d.getDay();
+                return g !== 0 && g !== 6;   // 0 = Pazar, 6 = Cumartesi
+            }
+
+            function calcTarget(days) {
+                var now = new Date();
+                var current = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                var counted = 0;
+
+                if (now.getHours() < 12 && isWorkingDay(current)) {
+                    counted = 1;
+                }
+
+                while (counted < days) {
+                    current.setDate(current.getDate() + 1);
+                    if (isWorkingDay(current)) {
+                        counted++;
+                    }
+                }
+
+                return current;
+            }
+            $('#targetDays').on('input', function () {
+                if (this.value.length > 2) {
+                    this.value = this.value.slice(0, 2);
+                }
+            });
+
+            $('#targetDays').on('input', function () {
+                var days = parseInt($(this).val(), 10);
+
+                if (!days || days < 1) {
+                    $('#targetPreview').text('');
+                    return;
+                }
+
+                var d = calcTarget(days);
+
+                var text = d.toLocaleDateString('tr-TR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric', weekday: 'long'
+                });
+
+                $('#targetPreview').text('Hedef tarih: ' + text);
+            });
+
+        });
+    </script>
+}

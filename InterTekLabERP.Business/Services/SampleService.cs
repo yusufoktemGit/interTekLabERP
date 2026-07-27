@@ -32,7 +32,7 @@ public class SampleService : ISampleService
             .Include(x => x.UpdatedByUser)
             .FirstOrDefault(x => x.Id == id);
     }
-    public List<SampleRequest> GetForExport(int? statusId, DateTime? startDate, DateTime? endDate)
+    public List<SampleRequest> GetForExport(int? statusId, DateTime? startDate, DateTime? endDate, string? search)
     {
         var query = _context.SampleRequests
             .Include(x => x.Status)
@@ -48,6 +48,18 @@ public class SampleService : ISampleService
         {
             var end = endDate.Value.Date.AddDays(1); // bitiş gününü tam kapsa
             query = query.Where(x => x.SampleAcceptDate < end);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            query = query.Where(x =>
+                x.TrackingNo.Contains(s) ||
+                x.OfferNo.Contains(s) ||
+                x.CustomerName.Contains(s) ||
+                x.ProductName.Contains(s) ||
+                (x.ServicePurchasedFrom != null && x.ServicePurchasedFrom.Contains(s)) ||
+                (x.AnalysisInfo != null && x.AnalysisInfo.Contains(s)));
         }
 
         return query

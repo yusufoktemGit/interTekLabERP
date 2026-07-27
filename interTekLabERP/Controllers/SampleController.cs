@@ -34,20 +34,21 @@ public class SampleController : Controller
         _testCardService = testCardService;
     }
 
-    public IActionResult Index(int? statusId)
+    public IActionResult Index(int? statusId, DateTime? startDate, DateTime? endDate, string? search)
     {
-        var model = _sampleService.GetAll();
+        var model = _sampleService.GetForExport(statusId, startDate, endDate, search);
 
-        if (statusId.HasValue)
-        {
-            model = model.Where(x => x.StatusId == statusId.Value).ToList();
-        }
+        // seçili filtreleri forma geri yansıt
+        ViewBag.SelectedStatus = statusId;
+        ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+        ViewBag.Search = search;
 
         return View(model);
     }
-    public IActionResult ExportExcel(int? statusId, DateTime? startDate, DateTime? endDate)
+    public IActionResult ExportExcel(int? statusId, DateTime? startDate, DateTime? endDate, string? search)
     {
-        var samples = _sampleService.GetForExport(statusId, startDate, endDate);
+        var samples = _sampleService.GetForExport(statusId, startDate, endDate, search);
 
         var bytes = SampleExcelExporter.Build(samples);
 

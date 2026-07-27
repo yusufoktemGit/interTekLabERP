@@ -287,5 +287,75 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
+
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">Onay</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body" id="confirmModalText">
+                    Emin misiniz?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Vazgeç
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmModalOk">
+                        Evet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var pendingForm = null;
+
+            var modalEl = document.getElementById('confirmModal');
+            var modal = new bootstrap.Modal(modalEl);
+
+            var titleEl = document.getElementById('confirmModalTitle');
+            var textEl = document.getElementById('confirmModalText');
+            var okBtn = document.getElementById('confirmModalOk');
+
+            document.querySelectorAll('.js-confirm-form').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+
+                    if (form.dataset.confirmed === '1') {
+                        return;
+                    }
+
+                    if (!form.checkValidity()) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    var btn = form.querySelector('[type="submit"]');
+
+                    titleEl.textContent = btn.getAttribute('data-confirm-title') || 'Onay';
+                    textEl.textContent = btn.getAttribute('data-confirm-text') || 'Emin misiniz?';
+                    okBtn.textContent = btn.getAttribute('data-confirm-btn') || 'Evet';
+
+                    okBtn.className = 'btn ' + (btn.getAttribute('data-confirm-class') || 'btn-primary');
+
+                    pendingForm = form;
+                    modal.show();
+                });
+            });
+
+            okBtn.addEventListener('click', function () {
+                if (pendingForm) {
+                    pendingForm.dataset.confirmed = '1';
+                    modal.hide();
+                    pendingForm.submit();
+                }
+            });
+        })();
+    </script>
+
 </body>
 </html>

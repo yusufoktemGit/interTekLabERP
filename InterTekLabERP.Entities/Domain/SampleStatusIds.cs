@@ -7,4 +7,5 @@ public static class SampleStatusIds
     public const int AnalysisInProgress = 3;
     public const int ReportCompleted = 4;
     public const int Cancelled = 5;
+    public const int Invoiced = 6;              // 👈 eklendi
 }

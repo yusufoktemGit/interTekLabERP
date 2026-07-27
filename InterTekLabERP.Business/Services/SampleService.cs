@@ -253,7 +253,7 @@ public class SampleService : ISampleService
 
         sample.StatusId = statusId;
 
-        if (statusId == SampleStatusIds.ReportCompleted)
+        if (statusId == SampleStatusIds.ReportCompleted && !sample.ExitDate.HasValue)
         {
             sample.ExitDate = DateTime.Now;
         }

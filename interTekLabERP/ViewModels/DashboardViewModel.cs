@@ -15,6 +15,8 @@ public class DashboardViewModel
     public int CompletedSamples { get; set; }
     public int CancelledSamples { get; set; }
 
+    public int InvoicedSamples { get; set; }
+
     public int TotalUsers { get; set; }
 
     public int ActiveUsers { get; set; }

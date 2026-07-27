@@ -36,6 +36,7 @@
             <option value="3">Analiz Devam Ediyor</option>
             <option value="4">Rapor Tamamlandı</option>
             <option value="5">İptal Edildi</option>
+            <option value="6">Faturalandırıldı</option>
         </select>
     </div>
     <div class="col-auto">
@@ -62,6 +63,7 @@
                     <th>Ürün</th>
                     <th>Hizmet Alan</th>
                     <th>Kabul Tarihi</th>
+                    <th>Hedef Tarih</th>
                     <th>Çıkış Tarihi</th>
                     <th>Durum</th>
                     <th width="120">İşlem</th>
@@ -93,6 +95,22 @@
 
                             <td>
                                 @item.SampleAcceptDate.ToString("dd.MM.yyyy")
+                            </td>
+                            <td>
+                                @if (item.TargetDate.HasValue)
+                                {
+                                    var gecikti = !item.ExitDate.HasValue
+                                    && item.StatusId != 5
+                                    && item.TargetDate.Value.Date < DateTime.Now.Date;
+
+                                    <span class="@(gecikti ? "text-danger fw-semibold" : "")">
+                                        @item.TargetDate.Value.ToString("dd.MM.yyyy")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
                             </td>
                             <td>
                                 @(item.ExitDate.HasValue? item.ExitDate.Value.ToString("dd.MM.yyyy") : "-")
@@ -128,6 +146,12 @@
                                         İptal Edildi
                                     </span>
                                 }
+                                else if (item.StatusId == 6)
+                                {
+                                    <span class="badge bg-dark">
+                                        Faturalandırıldı
+                                    </span>
+                                }
                             </td>
                             <td>
                                 <a asp-action="Detail"
@@ -143,7 +167,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="9" class="text-center">
+                        <td colspan="10" class="text-center">
                             Kayıt bulunamadı.
                         </td>
                     </tr>

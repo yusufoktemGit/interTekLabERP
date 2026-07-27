@@ -181,6 +181,26 @@
 
         </a>
     </div>
+    <div class="col-md-3">
+        <a asp-controller="Sample"
+           asp-action="Index"
+           asp-route-statusId="6"
+           class="text-decoration-none">
+
+            <div class="card text-bg-dark shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <h6>Faturalandırıldı</h6>
+
+                    <h2>@Model.InvoicedSamples</h2>
+
+                </div>
+
+            </div>
+
+        </a>
+    </div>
 
 
 </div>
@@ -263,6 +283,12 @@
                                             {
                                                 <span class="badge bg-danger">
                                                     İptal Edildi
+                                                </span>
+                                            }
+                                            else if (item.StatusId == 6)
+                                            {
+                                                <span class="badge bg-dark">
+                                                    Faturalandırıldı
                                                 </span>
                                             }
 

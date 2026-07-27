@@ -4,6 +4,50 @@
 
 @{
     ViewData["Title"] = "Numune Detayı";
+
+    string? delayText = null;
+    string delayClass = "bg-success";
+
+    if (Model.TargetDate.HasValue && Model.StatusId != 5)
+    {
+        if (Model.ExitDate.HasValue)
+        {
+            // iş kapanmış: çıkış ile hedefi karşılaştır
+            int diff = (Model.ExitDate.Value.Date - Model.TargetDate.Value.Date).Days;
+
+            if (diff <= 0)
+            {
+                delayText = "Zamanında tamamlandı";
+                delayClass = "bg-success";
+            }
+            else
+            {
+                delayText = $"{diff} gün geç tamamlandı";
+                delayClass = "bg-danger";
+            }
+        }
+        else
+        {
+            // iş devam ediyor: bugün ile hedefi karşılaştır
+            int diff = (DateTime.Now.Date - Model.TargetDate.Value.Date).Days;
+
+            if (diff > 0)
+            {
+                delayText = $"{diff} gün gecikmede";
+                delayClass = "bg-danger";
+            }
+            else if (diff == 0)
+            {
+                delayText = "Son gün";
+                delayClass = "bg-warning text-dark";
+            }
+            else
+            {
+                delayText = $"{-diff} gün kaldı";
+                delayClass = "bg-info";
+            }
+        }
+    }
 }
 
 @if (TempData["Error"] != null)
@@ -138,7 +182,17 @@
                     </div>
 
                     <div class="col-md-8">
-                        @Model.AnalysisInfo
+                        @if (!string.IsNullOrWhiteSpace(Model.AnalysisInfo))
+                        {
+                            foreach (var t in Model.AnalysisInfo.Split('|', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <span class="badge bg-light text-dark border me-1 mb-1">@t.Trim()</span>
+                            }
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
                     </div>
 
                 </div>
@@ -191,6 +245,26 @@
 
                 </div>
 
+                @if (Model.TargetDate.HasValue)
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-semibold">
+                            Hedef Tarih
+                        </div>
+                        <div class="col-md-8">
+                            @Model.TargetDate.Value.ToString("dd.MM.yyyy")
+                            @if (Model.TargetDays.HasValue)
+                            {
+                                <span class="text-muted">(@Model.TargetDays iş günü)</span>
+                            }
+                            @if (delayText != null)
+                            {
+                                <span class="badge @delayClass ms-2">@delayText</span>
+                            }
+                        </div>
+                    </div>
+                }
+
                 @if (Model.ExitDate.HasValue)
                 {
                     <div class="row mb-3">
@@ -228,30 +302,52 @@
     </div>
 
     <div class="col-lg-4">
-
         @if (Model.StatusId == 4)
         {
             <div class="card shadow-sm border-0 mb-3">
 
                 <div class="card-header bg-white">
-
-                    <h5 class="mb-0">
-                        Durum
-                    </h5>
-
+                    <h5 class="mb-0">Durum</h5>
                 </div>
 
                 <div class="card-body text-center">
 
-                    <span class="badge bg-success fs-6">
+                    <span class="badge bg-success fs-6 mb-3 d-block">
                         Rapor Tamamlandı
                     </span>
 
+                    <form asp-action="UpdateStatus" method="post"
+                          onsubmit="return confirm('Bu iş Faturalandırıldı olarak işaretlenecek. Emin misiniz?');">
+
+                        <input type="hidden" name="sampleId" value="@Model.Id" />
+                        <input type="hidden" name="statusId" value="6" />
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Faturalandırıldı Olarak İşaretle
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        }
+        else if (Model.StatusId == 6)
+        {
+            <div class="card shadow-sm border-0 mb-3">
+
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Durum</h5>
+                </div>
+
+                <div class="card-body text-center">
+
+                    <span class="badge bg-dark fs-6">
+                        Faturalandırıldı
+                    </span>
+
                     <div class="mt-3 text-muted">
-
-                        Bu kayıt tamamlanmıştır.
+                        Bu iş tamamlanıp faturalandırılmıştır.
                         Durum değiştirilemez.
-
                     </div>
 
                 </div>

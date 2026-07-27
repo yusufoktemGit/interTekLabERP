@@ -8,14 +8,15 @@ public static class SampleExcelExporter
     public static byte[] Build(IEnumerable<SampleRequest> samples)
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Kapanan İşler");
+        var ws = wb.Worksheets.Add("Numuneler");
 
         string[] headers =
-         {
+           {
             "Takip No", "Teklif No", "Müşteri", "Ürün", "Analiz Bilgisi",
             "Kabul Tarihi", "Durum", "Hizmet Alınan", "Kargo Firması",
             "Satış Fiyatı", "Satış Para Birimi", "Alış Fiyatı", "Alış Para Birimi",
-            "Kargo Maliyeti", "Kâr", "Fatura Onaylı", "Çıkış Tarihi"  
+            "Kargo Maliyeti", "Kâr", "Fatura Onaylı", "Çıkış Tarihi",
+            "Hedef Süre (İş Günü)", "Hedef Tarih", "Gecikme (Gün)"
         };
 
         for (int i = 0; i < headers.Length; i++)
@@ -54,12 +55,39 @@ public static class SampleExcelExporter
 
             ws.Cell(r, 16).Value = s.InvoiceApproved == true ? "Evet" : "Hayır";
 
-            if (s.ExitDate.HasValue)                                    
+            if (s.ExitDate.HasValue)
             {
                 ws.Cell(r, 17).Value = s.ExitDate.Value;
                 ws.Cell(r, 17).Style.NumberFormat.Format = "dd.MM.yyyy";
             }
 
+            // 18: Hedef süre (iş günü)
+            if (s.TargetDays.HasValue)
+                ws.Cell(r, 18).Value = s.TargetDays.Value;
+
+            // 19: Hedef tarih
+            if (s.TargetDate.HasValue)
+            {
+                ws.Cell(r, 19).Value = s.TargetDate.Value;
+                ws.Cell(r, 19).Style.NumberFormat.Format = "dd.MM.yyyy";
+            }
+
+            // 20: Gecikme (gün) - iptal edilenler hariç
+            if (s.TargetDate.HasValue && s.StatusId != SampleStatusIds.Cancelled)
+            {
+                if (s.ExitDate.HasValue)
+                {
+                    // kapanmış iş: çıkış - hedef
+                    int diff = (s.ExitDate.Value.Date - s.TargetDate.Value.Date).Days;
+                    ws.Cell(r, 20).Value = diff > 0 ? diff : 0;
+                }
+                else
+                {
+                    // devam eden iş: bugün - hedef (sadece geçmişse)
+                    int diff = (DateTime.Now.Date - s.TargetDate.Value.Date).Days;
+                    ws.Cell(r, 20).Value = diff > 0 ? diff : 0;
+                }
+            }
             r++;
         }
 

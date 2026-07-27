@@ -25,6 +25,7 @@ public class HomeController : Controller
         var ShippedSamples = _context.SampleRequests.Count(x => x.StatusId == SampleStatusIds.Shipped);
         var CompletedSamples =  _context.SampleRequests.Count(x => x.StatusId == SampleStatusIds.ReportCompleted);
         var CancelledSamples = _context.SampleRequests.Count(x => x.StatusId == SampleStatusIds.Cancelled);
+        var InvoicedSamples = _context.SampleRequests.Count(x => x.StatusId == SampleStatusIds.Invoiced);  
         var RecentSamples = _context.SampleRequests.Include(x => x.Status).OrderByDescending(x => x.CreatedDate).Take(10).ToList();
         var TotalUsers = _context.Users.Count();
         var ActiveUsers = _context.Users.Count(x => x.IsActive);
@@ -43,6 +44,8 @@ public class HomeController : Controller
             CompletedSamples = CompletedSamples,
 
             CancelledSamples = CancelledSamples,
+
+            InvoicedSamples = InvoicedSamples,
 
             TotalUsers = TotalUsers,
 

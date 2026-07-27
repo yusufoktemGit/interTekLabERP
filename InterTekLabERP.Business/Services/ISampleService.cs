@@ -21,7 +21,7 @@ namespace interTekLabERP.Business.Services
 
         string GenerateTrackingNo();
 
-        List<SampleRequest> GetForExport(int? statusId, DateTime? startDate, DateTime? endDate);
+        List<SampleRequest> GetForExport(int? statusId, DateTime? startDate, DateTime? endDate, string? search);
 
         void AddBulk(string offerNo, string customerName, List<BulkSampleRow> rows, int createdBy);
 
